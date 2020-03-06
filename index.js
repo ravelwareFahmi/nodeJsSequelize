@@ -96,6 +96,7 @@ app.get('/book/', (req,res) => {
 app.post('/book/', [
   //File upload (karena pakai multer, tempatkan di posisi pertama agar membaca multipar form-data)
   upload.single('image'),
+
   // Set Form Validate rule 
   check('isbn')
     .isLength({ min: 5 })
@@ -106,18 +107,16 @@ app.post('/book/', [
           throw new Error('ISBN Alredy in use')
         }
       })
-    })
+    }
 ),
 check('name')
     .isLength({min: 2}),
-check('year')
-    .isLength({min: 4, max: 4})
-    .isNumeric(),
 check('author')
     .isLength({min: 2}),
 check('description')
-    ,isLength({min: 10})
-], (req, res)=> {
+    .isLength({min: 10})
+],
+ (req, res)=> {
  const errors = validationResult(req);
  if(!errors.isEmpty()) {
    return res.status(422).json({errors: errors.mapped()});
@@ -136,10 +135,8 @@ check('description')
      "message": "Book Addeds",
      "data": newBook
    })
+  })
  })
-}
-
-
 
 app.listen(3000, () => console.log("server berjalan pada http://localhost:3000"))
 
