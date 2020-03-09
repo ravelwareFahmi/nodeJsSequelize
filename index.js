@@ -96,7 +96,6 @@ app.get('/book/', (req,res) => {
 app.post('/book/', [
   //File upload (karena pakai multer, tempatkan di posisi pertama agar membaca multipar form-data)
   upload.single('image'),
-
   // Set Form Validate rule 
   check('isbn')
     .isLength({ min: 5 })
@@ -137,6 +136,95 @@ check('description')
    })
   })
  })
+
+// endpoint put
+app.put('/book',[
+  // file upload (karena pakai multer, tempatkan di posisi pertama agar membaca multipart formdata)
+  upload.single('image'),
+
+  // Set Form Validation Rule 
+  check('isbn')
+    .isLength({min: 5})
+    .isNumeric()
+    .custom(value => {
+      return book.findOne({where: {isbn:value}}).then(b => {
+        if(!b){
+          throw new Error('ISBN not found');
+        }
+      })
+    }
+  ),
+  check('name')
+    .isLength({min: 2}),
+  check('author')
+    .isLength({min: 2}),
+  check('description')
+    .isLength({min: 10})
+], (req, res) => {
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+    return res.status(422).json({errors: errors.mapped()});
+  }
+  const update = {
+    name: req.body.name,
+    isbn: req.body.isbn,
+    year: req.body.year,
+    author: req.body.author,
+    description: req.body.description,
+    image: req.file === undefined ? "" : req.file.filename
+  }
+  book.update(update,{where: {isbn: req.body.isbn}})
+    .then(affectedRow => {
+      return book.findOne({where: {isbn: req.body.isbn}})
+    })
+    .then(b => {
+      res.json({
+        "status": "success",
+        "message": "Book Updated",
+        "data": b
+      })
+    })
+  }
+)
+
+//endpoint delete
+app.delete('/book/:isbn' ,[
+  // Set form validation rule 
+  check('isbn')
+    .isLength({ min: 5})
+    .isNumeric()
+    .custom(value => {
+      return book.findOne({where: {isbn: value}}).then(b => {
+        if(!b){
+          throw new Error('ISBN not found');
+        }
+      })
+    }
+),
+], (req, res)=> {
+  book.destroy({where: {isbn: req.params.isbn}})
+  .then(affectedRow => {
+    if(affectedRow){
+      return {
+        "status":"succes",
+        "message":"Book Delete",
+        "data": null
+      }
+    }
+    return {
+      "status":"error",
+      "message":"Failed",
+      "data": null
+    }
+  })
+  .then(r => {
+    res.json(r)
+  })
+} 
+
+)
+
+
 
 app.listen(3000, () => console.log("server berjalan pada http://localhost:3000"))
 
