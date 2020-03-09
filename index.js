@@ -20,7 +20,6 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     crypto.pseudoRandomBytes(16, function (err, raw) {
       if (err) return cb(err)  
-
       cb(null, raw.toString('hex') + path.extname(file.originalname))
     });
   }
@@ -59,7 +58,7 @@ sequelize.authenticate()
     },
     'isbn': Sequelize.STRING,
     'name': Sequelize.STRING,
-    'year': Sequelize.STRING,
+    'year': Sequelize.DATEONLY,
     'author': Sequelize.STRING,
     'description': Sequelize.TEXT,
     'image': {
@@ -86,7 +85,7 @@ sequelize.authenticate()
 
 // endpoint get 
 app.get('/book/', (req,res) => {
-    // res.send('hello world');
+    // findAll digunakan untuk mengambil semua data pada tabel 
     book.findAll().then(book => {
       res.json(book)
     })
@@ -128,6 +127,7 @@ check('description')
    author: req.body.author,
    description: req.body.description,
    image: req.file === undefined ? "" : req.file.filename
+   
  }).then(newBook => {
    res.json({
      "status": "success",
@@ -156,10 +156,10 @@ app.put('/book',[
   ),
   check('name')
     .isLength({min: 2}),
-  check('author')
-    .isLength({min: 2}),
-  check('description')
-    .isLength({min: 10})
+  // check('author')
+  //   .isLength({min: 2}),
+  // check('description')
+  //   .isLength({min: 10})
 ], (req, res) => {
   const errors = validationResult(req);
   if(!errors.isEmpty()){
@@ -221,7 +221,6 @@ app.delete('/book/:isbn' ,[
     res.json(r)
   })
 } 
-
 )
 
 
