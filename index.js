@@ -1,4 +1,5 @@
 const express = require('express');
+const moment = require('moment');
 const bodyParser = require('body-parser'); //post body handler
 const { check, validationResult } = require('express-validator/check') //form validation
 const { matchedData, sanitize } = require('express-validator/filter'); //sanitize form params
@@ -26,12 +27,16 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({storage: storage, dest: uploadDir});
-
 const Sequelize = require('sequelize');
+const Op = Sequelize.Op; //With Operator Op for Or && and
+const date1 = moment().format('D-MM-YYYY');
 const sequelize = new Sequelize('simple-rest', 'ravelware', 'R4v3lw4r3', {
   host:'localhost',
   dialect: 'mssql',
-//   operatorsAliases: false,
+  dialectOptions: {
+    useUTC: false //for reading from database
+},
+timezone: '+07:00', //for writing to database
   pool: {
     max: 5,
     min: 0,
@@ -71,16 +76,16 @@ sequelize.authenticate()
     },
     'createdAt': {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        // defaultValue: Sequelize.NOW
     },    
     'updatedAt': {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        // defaultValue: Sequelize.NOW
     },   
     
 }, {
     //prevent sequelize transform table name into plural
-    freezeTableName: true,
+    freezeTableName: true,    
 })
 
 // endpoint get 
@@ -90,6 +95,36 @@ app.get('/book/', (req,res) => {
       res.json(book)
     })
 });
+
+//endpoint get date
+app.get('/book/date', (req, res) =>{
+  // console.log(date1);
+  // var a = moment([10, 0, 29]);
+  // var b = moment([09, 0, 28]);
+  // var test = a.diff(b, 'hours')
+ 
+  // var now = moment(new Date()); //todays date
+  // var end = moment("2015-12-1"); // another date
+  // var duration = moment.duration(now.diff(end));
+  // var days = duration.asYears();
+  var a = moment(new Date()); //todays date
+  // var b = moment('2020-03-10T10:00:00');
+  // var hours = console.log(a.diff(b, 'hours'))
+  // console.log(hours);
+  book.findAll(
+    {
+    where: 
+    { 
+      createdAt: {
+        // [Op.lt]: req.body.createdAt // get value form request.body.cretedAt lether than value var b
+        [Op.lt]: a //lether than value var b
+      }
+    }
+  }
+  ).then(book => {
+    res.json(book)
+  })
+})
 
 //endpoint post 
 app.post('/book/', [
@@ -112,7 +147,7 @@ check('name')
 check('author')
     .isLength({min: 2}),
 check('description')
-    .isLength({min: 10})
+    .isLength({min: 2})
 ],
  (req, res)=> {
  const errors = validationResult(req);
