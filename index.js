@@ -31,7 +31,8 @@ const Sequelize = require('sequelize');
 const Op = Sequelize.Op; //With Operator Op for Or && and
 const date1 = moment().format('D-MM-YYYY');
 const sequelize = new Sequelize('simple-rest', 'ravelware', 'R4v3lw4r3', {
-  host:'localhost',
+  host: 'localhost',
+  // dialect: 'postgres',
   dialect: 'mssql',
   dialectOptions: {
     useUTC: false //for reading from database
